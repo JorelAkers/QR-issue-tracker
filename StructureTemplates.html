@@ -1,0 +1,100 @@
+
+    <template id='morewin'>
+      <div class='container'>
+        <dialog id='morewindialog' width='50%'>
+          <button id='exitmore' class='waves-effect waves-light btn-large'>Close</button>
+        </dialog>
+      </div>
+    </template>
+    
+    <template id='replacewin'>
+      <div class='container' width='50%'>
+        <dialog id='replacewindialog'>
+          <div id='inner1' class='itemcard'>
+            <div class='input-field col s8'><label></label><input placeholder='serial #:' type='text' id='serialinput' list='seriallist'>
+            <button id='serialsubmit' class='waves-effect waves-light btn-large'>submit</button>
+            </div>
+          <button class='waves-effect waves-light btn-large' id='shownewdev'>New Device</button>
+          </div>
+         <div class='container'>
+           <button id='exitreplace' class='waves-effect waves-light btn-large'>Close</button>
+          </div>
+         </dialog>
+         <dialog id='newdevdialog' class='newdev'>
+           <button id='exitnewdev' class='waves-effect waves-light btn-large'>Close</button>
+         </dialog>
+        </div>
+    </template>
+
+    <template id='newdevice'>
+      <div class='container' width='50%'>
+        <div class='itemcard'>
+          <label>What type of device?</label>
+          <div class="input-field">
+            <select id='role'>
+              <option value='Default'></option>
+              <option value='Display'>Display</option>
+              <option value='Controller'>Controller</option>
+              <option value='Switcher'>Switcher</option>
+              <option value='Transmitter'>Transmitter</option>
+              <option value='Receiver'>Receiver</option>
+              <option value='DSP'>DSP</option>
+              <option value='Wireless AV'>Wireless AV</option>
+            </select>
+            <input type='hidden' id='rolehold' value="">
+          </div>
+          <label></label><input placeholder='Other:' id='roleother'>
+          </div>
+        <div class='itemcard'>
+          <label>Model:</label>
+          <div class='input-field'>
+          <select id='model'>
+            <option value='Default'></option>
+            <option value='DMP 44'>DMP 44</option>
+            <option value='DSW 233 4k Tx'>DSW 233 4k Tx</option>
+            <option value='EPSON PowerLite 1945'>EPSON PowerLite 1945</option>
+            <option value='EPSON PowerLite 1985 WU'>EPSON PowerLite 1985 WU</option>
+            <option value='EPSON PowerLite 2250U'>EPSON PowerLite 2250U</option>
+            <option value='EPSON PowerLite L510U'>EPSON PowerLite L510U</option>
+            <option value='EPSON PowerLite L610U'>EPSON PowerLite L610U</option>
+            <option value='HDMI 230 Rx'>HDMI 230 Rx</option>
+            <option value='IN 1606'>IN 1606</option>
+            <option value='IN 1608'>IN 1608</option>
+            <option value='MLC 226'>MLC 226</option>
+            <option value='MLC 104'>MLC 104</option>
+            <option value='DSP'>DSP</option>
+            <option value='MPS 602 SA'>MPS 602 SA</option>
+            <option value='MPS 602 MA'>MPS 602 MA</option>
+            <option value='MPS 602 no amp'>MPS 602 no amp</option>
+            <option value='UWP 232 Tx'>UWP 232 Tx</option>
+            <option value='DTP USW 233 Tx'>DTP USW 233 Tx</option>
+            <option value='XTP T USW 103'>XTP T USW 103</option>
+            <option value='XTP R HDMI'>XTP R HDMI</option>
+          </select>
+          <label></label><input placeholder='Other:' id='modelother'>
+          </div>
+          </div>
+          <div class='itemcard'>
+            <label></label><input placeholder='Manufacturer:' id='manufacturer'>
+          </div>
+          <div class='itemcard'>
+            <label></label><input placeholder='Serial Number:' id='srlnumb'>
+          </div>
+          <div class='itemcard'>
+            <label></label><input placeholder='Firmware version:' id='firmwareversion'>
+          </div>
+          <div class='itemcard'>
+            <label></label><input placeholder='Engineering revision (Extron only):' id='engrev'>
+          </div>
+          <div class='itemcard'>
+            <label></label><input placeholder='RMA number:' id='rma'>
+          </div>
+          <div class='itemcard'>
+            <label></label><input placeholder='Device History:' id='devhist'>
+          </div>
+          <div class='itemcard'>
+            <label></label><input placeholder='Notes:' id='devnote' value="">
+          </div>
+          <button id='submitnewdev' class='waves-effect waves-light btn-large'>submit</button>
+      </div>
+    </template>
