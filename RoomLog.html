@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <?!= include("main-css") ?>
+    <?!= include("StructureTemplates") ?>
+  </head>
+  <body>
+    <div class ="container"> 
+    <p hidden id='test1'><?= prefill; ?></p>
+    <h1><?= title; ?></h1>
+    <div class="input-field col s8">
+    <label></label><input placeholder="Room:" type="text" id="room" list="roomlist" value="">
+    <dialog id='bugreport'>
+      <label></label><input placeholder='Your name' type='text' id='reportname' >
+      <label></label><input placeholder='Describe the issue:' type='text' id='bug'>
+      <button id='sendreport' class="waves-effect waves-light btn-large" onclick="sendreport()">Send</button>
+      <button id='bugreportclose' class="waves-effect waves-light btn-large">Close</button>
+    </dialog>
+    </div>
+    <button id="roomsub" class="waves-effect waves-light btn-large" onclick="fetchinfo()">Submit</button>
+    <button id='bugreportbutton' class="waves-effect waves-light btn-large">Report a Bug</button>
+    <div>
+      <div id='loader'></div>
+      <div id="resultswindow" width="100%" height="600px" ></div>
+      <hidden id='roomph'></hidden>
+    </div>
+    
+    <datalist id='roomlist'></datalist>
+    
+    <script>
+    $("document").ready(function() {
+      google.script.run.withSuccessHandler(listpop).importALLrooms();
+      $('#loader').hide();
+      $('#'+'bugreportbutton').on("click", {dialogwin: 'bugreport'}, opendialog);
+      $('#'+'bugreportclose').on("click", {dialogwin: 'bugreport'}, closedialog);
+      if($('#test1').text() != "")
+      {
+        console.log("parameter pass successful: "+$('#test1').text());
+        $('#room').val($('#test1').text());
+        var room = $('#room').val();
+        fetchinfo(room);
+      }  
+     });
+    function fetchinfo(room)
+    {
+      if(!room)
+      {
+        var room = $('#room').val();
+      }
+      $('#roomph').val(room)
+      $('#loader').show();
+      console.log(room);
+      //console.log("the button has been clicked"); 
+      var roominfo = google.script.run.withSuccessHandler(insertinfo).importRoominfo(room);
+    }
+    function insertinfo(roomdata)
+    {
+     var maindiv = $('#resultswindow');
+     maindiv.html('');
+     //maindiv.append("<div id='loader'></div>");
+     var data = JSON.parse(roomdata);
+     var key = Object.keys(data);
+     
+     for(var i = 0; i < key.length; i++)
+     {
+     //replace all these if statements with switch statement.
+       if(key[i] == "ControlType" || key[i] == "Switcher" || key[i] == "DSP" ||  key[i] == "Transmitter" ||  key[i] == "Receiver")
+       {
+         console.log("Device case: "+key[i]+"\n")
+         var logval = '';
+         var devinfo = '';
+         var devid = '';
+         var button = '';
+         var seriallist = '';
+         var newdiv = $("<div id='"+key[i]+"' class='itemcard'></div>");
+         switch(key[i])
+           {
+             case "Switcher":
+               logval = data["SwitcherLog"];
+               devinfo = data["SwitcherInfo"];
+               devid = data["SwitcherID"];
+               seriallist = data["SwitcherSerials"];
+               break;
+               
+             case "ControlType":
+               logval = data["ControllerLog"];
+               devinfo = data["ControllerInfo"];
+               devid = data["ControllerID"];
+               seriallist = data["ControlTypeSerials"];
+               break;
+               
+             case "Transmitter":
+               logval = data["TransmitterLog"];
+               devinfo = data["TransmitterInfo"];
+               devid = data["TransmitterID"];
+               seriallist = data["TransmitterSerials"];
+               break;
+             
+             case "Receiver":
+               logval = data["ReceiverLog"];
+               devinfo = data["ReceiverInfo"];
+               devid = data["ReceiverID"];
+               seriallist = data["ReceiverSerials"];
+               break;
+             
+             default:
+               break;
+            }
+        newdiv.append("<h1>"+key[i]+": "+data[key[i]]+"</h1>");
+        maindiv.append("<datalist id='"+key[i]+"list'></datalist>");
+        var replacebutton = "replace"+key[i];
+        var morebutton = "show"+key[i];
+        var closemore = "exit"+key[i];
+        var closerep = 'exitreplace'+key[i];
+        var devwin = '#'+key[i]+'window';
+        var newdevopen = key[i]+'shownewdev';
+        var newdevsubmit = key[i]+"submitnewdev";
+        var newdevclose = key[i]+'exitnewdev';
+        
+        //new block of code that builds the dialog windows.  Uses the HTML templates in StructureTemplates.html to build each dialog window.  Seems easier to read.
+        var more_dialog = $("#morewin").html();
+        var more_entry = $($.parseHTML(more_dialog));
+        popdatalist(key[i]+"list", data);
+        more_dialog = more_entry.find("#morewindialog").prepend(devinfo);
+        more_dialog = more_entry.find("#morewindialog").prop('id',key[i]+'morewin');
+        more_dialog = more_entry.find("#exitmore").prop('id',closemore);
+        newdiv.append(more_entry);
+        var replace_dialog = $("#replacewin").html();
+        var replace_entry = $($.parseHTML(replace_dialog));
+        var submit_button = key[i]+'serialsubmit';
+        var newdev_content = $('#newdevice').html();
+        replace_dialog = replace_entry.find("#replacewindialog").prop('id',key[i]+'replacewin');
+        replace_dialog = replace_entry.find("#exitreplace").prop('id',closerep);
+        replace_dialog = replace_entry.find("#serialsubmit").prop('id',submit_button);
+        replace_dialog = replace_entry.find("#serialinput").prop('id',key[i]+'serialinput').attr('list', key[i]+"list");
+        replace_dialog = replace_entry.find("#newdevdialog").prop('id',key[i]+'newdevdialog');
+        replace_dialog = replace_entry.find("#"+key[i]+'newdevdialog').prepend(newdev_content);
+        replace_dialog = replace_entry.find("#shownewdev").prop('id',key[i]+"shownewdev");
+        replace_dialog = replace_entry.find("#exitnewdev").prop('id',key[i]+"exitnewdev");
+        replace_dialog = replace_entry.find("#rolehold").prop('id',key[i]+"rolehold");
+        
+        
+        replace_dialog = replace_entry.find("#role").prop('id',key[i]+"role");
+        replace_dialog = replace_entry.find("#roleother").prop('id',key[i]+"roleother");
+        replace_dialog = replace_entry.find("#model").prop('id',key[i]+"model");
+        replace_dialog = replace_entry.find("#modelother").prop('id',key[i]+"modelother");
+        replace_dialog = replace_entry.find("#manufacturer").prop('id',key[i]+"manufacturer");
+        replace_dialog = replace_entry.find("#srlnumb").prop('id',key[i]+"srlnumb");
+        replace_dialog = replace_entry.find("#firmwareversion").prop('id',key[i]+"firmwareversion");
+        replace_dialog = replace_entry.find("#engrev").prop('id',key[i]+"engrev");
+        replace_dialog = replace_entry.find("#rma").prop('id',key[i]+"rma");
+        replace_dialog = replace_entry.find("#devhist").prop('id',key[i]+"devhist");
+        replace_dialog = replace_entry.find("#devnote").prop('id',key[i]+"devnote");
+        replace_dialog = replace_entry.find("#submitnewdev").prop('id',key[i]+"submitnewdev");
+        
+        newdiv.append(replace_entry);
+        
+        
+         // old code creating content of each device card
+        /* newdiv.append("<h1>"+key[i]+": "+data[key[i]]+"</h1>");
+         maindiv.append("<datalist id='"+key[i]+"list'></datalist>");
+         var replacebutton = "replace"+key[i];
+         var morebutton = "show"+key[i];
+         var closemore = "exit"+key[i];
+         var closerep = 'exitreplace'+key[i];
+         var devwin = '#'+key[i]+'window';
+         popdatalist(key[i]+"list", data);
+         newdiv.append("<div><dialog id='"+key[i]+"morewin'>"+devinfo+"<button id='exit"+key[i]+"' class='waves-effect waves-light btn-large'>Close</button></dialog></div>");
+         newdiv.append("<div class='container'><dialog id='"+key[i]+"replacewin'><div id='inner1' class='itemcard'><div class='input-field col s8'><label></label><input placeholder='serial #:' type='text' id='temp' list='"+key[i]+"list'><button id='serialsubmit' class='waves-effect waves-light btn-large'>submit</button></div><a href='https://docs.google.com/forms/d/e/1FAIpQLSd9bIRDlVzcp121YBWjM3hjdviLzHsox8lSh9QR1DDTkJv-IA/viewform' target='_blank' class='waves-effect waves-light btn-large' id='logTest'>New Device</a></div><divclass='container'><button id='exitreplace"+key[i]+"' class='waves-effect waves-light btn-large'>Close</button></dialog></div></div>");
+         newdiv.append("<button id='replace"+key[i]+"' class='waves-effect waves-light btn-large'>Replace</button>");
+         newdiv.append("<button id='show"+key[i]+"' class='waves-effect waves-light btn-large'>More Info</button>");
+         newdiv.append("<a href='"+logval+"' target='_blank' id='open"+key[i]+"log' class='waves-effect waves-light btn-large'>Device History</a></div>");*/
+         // End of old code block
+         
+         newdiv.append("<button id='"+replacebutton+"' class='waves-effect waves-light btn-large'>Replace</button>");
+         newdiv.append("<button id='show"+key[i]+"' class='waves-effect waves-light btn-large'>More Info</button>");
+         newdiv.append("<a href='"+logval+"' target='_blank' id='open"+key[i]+"log' class='waves-effect waves-light btn-large'>Device History</a></div>");
+         maindiv.append(newdiv);
+         $('#'+replacebutton).on("click", {dialogwin: key[i]+'replacewin'}, opendialog);
+         $('#'+closerep).on("click", {dialogwin: key[i]+'replacewin'}, closedialog);
+         $('#'+morebutton).on("click",{dialogwin: key[i]+'morewin'},opendialog);
+         $('#'+closemore).on("click", {dialogwin: key[i]+'morewin'},closedialog);
+         $('#'+submit_button).on("click", 
+           {
+             room: $('#room').val(),
+             newserial: key[i]+'serialinput',
+             oldserial: devid,
+             window: key[i]+'replacewin'
+           }, DeviceSwap_client);
+         $('#'+newdevopen).on("click",{dialogwin: key[i]+'newdevdialog'},opendialog);
+         $('#'+newdevclose).on("click", {dialogwin: key[i]+'newdevdialog'},closedialog);
+         
+         //$('#'+key[i]+'model')
+          
+         $('select').formSelect();
+         $('#'+key[i]+'role').change({holder: '#'+key[i]+'rolehold'} ,function(event)
+           {
+             
+           //  console.log("change detected in drop down. Rolepick value currently is: "+testval)
+             
+             var testval = $(this).children("option:selected").val();
+             console.log("Rolepick value has changed to: "+testval);
+             $(event.data.holder).val(testval);
+             console.log("secret value is: "+$(event.data.holder).val());
+           })
+         $('#'+key[i]+"submitnewdev").on("click", 
+         {
+           key: key[i]
+         }, newdev);
+         continue;
+       }
+       if(key[i] == "ClassroomPictureURL" || key[i] == "RackPictureURL")
+       {
+         var newdiv = $("<div id='"+key[i]+"'><h1>"+key[i]+": </h1>");
+         var pictemp = data[key[i]];
+         var picarray = pictemp.split("\n\n");
+         for(var j = 0; j < (picarray.length - 1); j++)
+         {
+        //   iframehtml = iframehtml.concat("<div id='"+key[i]+"'><a  href='"+picarray[j]+"' target='_blank'>Image "+(j+1)+"</a></div>");
+             newdiv.append("<div id='"+key[i]+"'><a  href='"+picarray[j]+"' target='_blank'>Image "+(j+1)+"</a></div>");
+         }
+         maindiv.append(newdiv);
+         continue;
+       }
+       if(key[i] == "LogQR" || key[i] == "Keys" || key[i] == "User" || key[i] == "TimeStamp" || key[i] == "ControllerLog" || key[i] == "ReceiverLog" || key[i] == "TransmitterLog" || key[i] == "SwitcherLog" || key[i] == "ControllerInfo" || key[i] == "ReceiverInfo" || key[i] == "TransmitterInfo" || key[i] == "SwitcherInfo" || key[i] == "SwitcherSerials" || key[i] == "ControlTypeSerials" || key[i] == "ReceiverSerials" || key[i] == "TransmitterSerials" || key[i] == "DSPSerials")
+       {
+         continue;
+       }
+       if(key[i] == "LogURL")
+       {
+       var newdiv = $("<div id='"+key[i]+"' class='itemcard'><h1>"+key[i]+"</h1><a  href='"+data[key[i]]+"' target='_blank'>"+data[key[i]]+"</a></div>");
+       maindiv.append(newdiv);
+         continue;
+       }
+     else
+       {
+         console.log("default case: "+key[i]+"\n");
+         var newdiv = $("<div id='"+key[i]+"' class='itemcard'><h1>"+key[i]+": "+data[key[i]]+"\n"+"</h1><button class='waves-effect waves-light btn-large' id='change"+key[i]+"'>Change</button></div>");
+         maindiv.append(newdiv);
+       //  iframehtml = iframehtml.concat("<div id='"+key[i]+"' class='itemcard'><h1>"+key[i]+": "+data[key[i]]+"\n"+"</h1><button class='waves-effect waves-light btn-large' id='change"+key[i]+"'>Change</button></div>");
+       }
+     }
+     //iframehtml = iframehtml.concat("<script> function buttontest(name) {console.log(name)} </scr"+"ipt>");
+   //  $('#resultswindow').html(iframehtml);
+     $('#loader').hide();
+     $('.itemcard').css("border", "2px solid black");
+    } //insertinfo ends here
+    
+    function opendialog(event)
+    {
+      $('#'+event.data.dialogwin).show();
+    }
+    
+    function closedialog(event)
+    {
+      $('#'+event.data.dialogwin).hide();
+    }
+    
+    function listpop(rooms)
+    {
+      var roomlist = JSON.parse(rooms);
+      var optionlist = '';
+      for(var i = 0; i < roomlist.length ; i++)
+      {
+        optionlist += '<option value="'+roomlist[i]+'" />';
+      }
+      document.getElementById('roomlist').innerHTML = optionlist;
+    }
+    
+    function popdatalist(list, array)
+    {
+      var pharr = [];
+      var optionlist = '';
+      switch (list)
+      {
+        case "ControlTypelist":
+        pharr = array["ControlTypeSerials"];
+        break;
+        
+        case "Switcherlist":
+        pharr = array["SwitcherSerials"];
+        break;
+        
+        case "DSPlist":
+        pharr = array["DSPSerials"];
+        break;
+        
+        case "Transmitterlist":
+        pharr = array["TransmitterSerials"];
+        break;
+        
+        case "Receiverlist":
+        pharr = array["ReceiverSerials"];
+        break;
+      }
+      for(var i = 0; i < pharr.length; i++)
+      {
+        optionlist += '<option value='+pharr[i]+' />';
+      }
+      console.log(list);
+      console.log(optionlist);
+      document.getElementById(list).innerHTML = optionlist;
+    }
+    function sendreport()
+    {
+      var report = $('#bug').val();
+      var reporter = $('#reportname').val();
+      google.script.run.withSuccessHandler(report_verify).bugreport(reporter,report);
+      console.log(report);
+    }
+    function report_verify()
+    {
+      $('#bugreport').hide();
+      alert("Bug report submitted!");
+    }
+    function DeviceSwap_client(event)
+    {
+      var room = event.data.room;
+      var newserial = $('#'+event.data.newserial).val();
+      var oldserial = event.data.oldserial;
+      var dssobj = {room: room, window: event.data.window};
+      console.log("Room is: "+room+"\noldserial is: "+oldserial+"\nNewserial is: "+newserial+"\ndss room: "+dssobj.room+"\ndss window: "+dssobj.window);
+      //going to execute all spreadsheet related code server side to avoid exposing information.
+      google.script.run.withSuccessHandler(devswapsuccess).withUserObject(dssobj).DeviceSwap_server(room, newserial, oldserial);
+    }
+    function devswapsuccess(sh,dssobj)
+    {
+      
+      if (sh == 1)
+      {
+        console.log("dev swap successful!")
+        var room = dssobj.room;
+        $('#'+dssobj.window).hide();
+        fetchinfo(room);
+      }
+      if(sh == 2)
+      {
+        alert("Could not find a device with the given serial number")
+      }
+      if (sh == 3)
+      {
+        alert("Cannot replace a device with itself.")
+      }
+      else
+      {
+        console.log("something has gone weird with devswapsuccess")
+      }
+    }
+
+    function newdev(event)
+    {
+      // console.log("specific secret is: "+$('#'+event.data.key+'role').val())
+      var newdevobj = {
+        room: $('#roomph').val(),
+        role: $('#'+event.data.key+'role').val(),
+        roleother: $('#'+event.data.key+'roleother').val(),
+        model: $('#'+event.data.key+'model').val(),
+        modelother: $('#'+event.data.key+'modelother').val(),
+        manufacturer: $('#'+event.data.key+'manufacturer').val(),
+        serial: $('#'+event.data.key+'srlnumb').val(),
+        firmware: $('#'+event.data.key+'firmwareversion').val(),
+        engrev: $('#'+event.data.key+'engrev').val(),
+        rma: $('#'+event.data.key+'rma').val(),
+        devhist: $('#'+event.data.key+'devhist').val(),
+        devnote: $('#'+event.data.key+'devnote').val()
+      };
+     console.log("object to send is the following: \n"+newdevobj.room+"\n"+newdevobj.role+"\n"+newdevobj.roleother+"\n"+newdevobj.model+"\n"+newdevobj.modelother+"\n"+newdevobj.manufacturer+"\n"+newdevobj.serial+"\n"+newdevobj.firmware+"\n"+newdevobj.engrev+"\n"+newdevobj.rma+"\n"+newdevobj.devhist+"\n"+newdevobj.devnote)
+   var serverwrite = google.script.run.newdevice_server(newdevobj);
+   /*for (var item in newdevobj)
+   {
+     console.log(typeof newdevobj[item]);
+   }*/
+     //$('#'+event.data.key+'role').val("");
+     $('#'+event.data.key+'roleother').val("");
+     //$('#'+event.data.key+'model').val("");
+     $('#'+event.data.key+'modelother').val("");
+     $('#'+event.data.key+'manufacturer').val("");
+     $('#'+event.data.key+'srlnumb').val("");
+     $('#'+event.data.key+'firmwareversion').val("");
+     $('#'+event.data.key+'engrev').val("");
+     $('#'+event.data.key+'rma').val("");
+     $('#'+event.data.key+'devhist').val("");
+     $('#'+event.data.key+'devnote').val("");
+    /* if (serverwrite == 1)
+       {
+       console.log("returned correct value from server");
+       }*/
+     }
+
+    </script>
+    </div>
+  </body>
+</html>
+
+
