@@ -1,0 +1,10 @@
+<script>
+    
+    document.getElementbyId("roomsub").addEventListener("click", fetchinfo);
+    function fetchinfo()
+    {
+      var room = document.getElementbyId("room").value;
+      var roominfo = google.script.runimportRoominfo(room);
+      Logger.log(roominfo);
+    }
+</script>
